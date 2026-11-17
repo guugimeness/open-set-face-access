@@ -1,0 +1,68 @@
+% Apresentação em Beamer - 15 minutos (±5 min, ao vivo no Meet; passar do tempo penaliza).
+% Os slides também são entregues no AVA junto com o artigo e o vídeo (até 30/11, 14h).
+% Mesmo tema visual do Trabalho 1. Figuras em ../imagens.
+
+\documentclass[aspectratio=169,11pt]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazilian]{babel}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\graphicspath{{../imagens/}}
+
+\usetheme{default}
+\definecolor{azul}{HTML}{263B80}
+\definecolor{rosa}{HTML}{B92765}
+\definecolor{cinza}{HTML}{56616E}
+\setbeamercolor{normal text}{fg=black,bg=white}
+\setbeamercolor{structure}{fg=azul}
+\setbeamercolor{frametitle}{fg=azul,bg=white}
+\setbeamercolor{title}{fg=azul}
+\setbeamercolor{alerted text}{fg=rosa}
+\setbeamercolor{block title}{fg=azul,bg=azul!7}
+\setbeamercolor{block body}{fg=black,bg=azul!3}
+\setbeamercolor{footline}{fg=cinza}
+\setbeamerfont{frametitle}{size=\Large,series=\bfseries}
+\setbeamerfont{title}{size=\LARGE,series=\bfseries}
+\setbeamertemplate{navigation symbols}{}
+\setbeamersize{text margin left=0.8cm,text margin right=0.8cm}
+\setbeamertemplate{footline}{\hfill\usebeamerfont{footline}\usebeamercolor[fg]{footline}%
+  \insertframenumber\hspace{0.7cm}\vspace{0.25cm}}
+
+\title{Reconhecimento Facial em Conjunto Aberto\\para Controle de Acesso}
+\author{Gustavo Laurindo \and Gustavo Gimenes \and Lucas Fujii \and Mairon Faria}
+\institute{Aprendizado de Máquina 2 -- UFSCar -- 2026/2}
+\date{}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{Problema}
+\begin{itemize}
+  \item Liberar a entrada só para os integrantes cadastrados
+  \item Rejeitar qualquer outra pessoa, inclusive nunca vista
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Método}
+webcam $\rightarrow$ detecção $\rightarrow$ alinhamento $\rightarrow$ CNN (embedding) $\rightarrow$ decisão
+\end{frame}
+
+\begin{frame}{Resultados}
+TODO
+\end{frame}
+
+\begin{frame}{Demonstração}
+TODO
+\end{frame}
+
+\begin{frame}{Conclusão}
+TODO
+\end{frame}
+
+\end{document}

@@ -1,0 +1,63 @@
+\documentclass[12pt]{article}
+\usepackage{sbc-template}
+\usepackage{graphicx,url}
+\usepackage[utf8]{inputenc}
+\usepackage[brazilian]{babel}
+\usepackage{xcolor}
+\usepackage{courier}
+
+% Figuras ficam em ../imagens (raiz do projeto).
+\graphicspath{{../imagens/}}
+
+\sloppy
+\title{Reconhecimento Facial em Conjunto Aberto para Controle de Acesso\\com Poucas Amostras de Cadastro}
+\author{Gustavo Cesar Bento Laurindo\inst{1}, Gustavo de Oliveira Gimenes\inst{1},\\ Lucas Vasconcelos Fujii\inst{1}, Mairon Cesar de Paula Faria\inst{1}}
+\address{Departamento de Computa\c{c}\~ao -- Universidade Federal de S\~ao Carlos (UFSCar)\\
+S\~ao Carlos -- SP -- Brasil
+\email{\{gustavocbl, ggimenes, lucasfujii, maironfaria\}@estudante.ufscar.br}}
+\date{}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+TODO.
+\end{abstract}
+
+\begin{resumo}
+TODO.
+\end{resumo}
+
+\section{Introdução}
+% Controle de acesso facial; por que classificação fechada falha; conjunto aberto.
+
+\section{Trabalhos relacionados}
+% FaceNet, ArcFace, SFace; reconhecimento em conjunto aberto; one-class.
+TODO: FaceNet~\cite{schroff2015facenet}, ArcFace~\cite{deng2019arcface}, LFW~\cite{huang2007lfw}.
+
+\section{Dados}
+% Rostos do grupo (sessões distintas, consentimento, LGPD) e desconhecidos (LFW/CelebA).
+% Divisão por sessão (integrantes) e por identidade (desconhecidos).
+
+\section{Método}
+\subsection{Pipeline: detecção, alinhamento e embedding}
+\subsection{CNNs avaliadas}
+% Do zero (ResNet18/CelebA), pré-treinadas, ajuste fino com perda ArcFace.
+\subsection{Regras de decisão em conjunto aberto}
+% Limiar no centróide, kNN, One-Class SVM, SVM com negativos, softmax com limiar.
+\subsection{Calibração do limiar e métricas}
+% FAR, FRR, EER, curva DET, identificação a FAR fixo.
+
+\section{Resultados}
+\subsection{Comparação entre CNNs e regras de decisão}
+\subsection{Número de amostras de cadastro}
+\subsection{Condições adversas e impostores difíceis}
+\subsection{Cadastro posterior e crescimento da galeria}
+
+\section{Discussão e limitações}
+% Ataques de apresentação fora do escopo; viés; privacidade.
+
+\section{Conclusão}
+
+\bibliographystyle{sbc}
+\bibliography{referencias}
+\end{document}

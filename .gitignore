@@ -1,0 +1,18 @@
+# Arquivos compilados
+build/
+
+# Dados biométricos do grupo (LGPD) e datasets baixados: nunca versionar
+dados/*
+!dados/README.md
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Pesos de modelos (baixados ou treinados)
+modelos/
+*.pt
+*.pth
+*.onnx
