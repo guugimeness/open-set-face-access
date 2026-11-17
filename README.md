@@ -1,109 +1,47 @@
-# Trabalho 2 — AM2 (UFSCar, 2026/2)
+# Controle de acesso facial em conjunto aberto
 
-Reconhecimento facial em conjunto aberto para controle de acesso: liberar os integrantes cadastrados e rejeitar pessoas desconhecidas.
+Sistema de controle de acesso por reconhecimento facial que **libera as pessoas cadastradas e rejeita qualquer outra**, inclusive quem o sistema nunca viu. Trabalho 2 da disciplina Aprendizado de Máquina 2 (UFSCar, 2026/2).
 
-## Plano do trabalho
+## O problema
 
-O eixo técnico é **transfer learning para reconhecimento facial em conjunto aberto com poucas amostras**: uma CNN gera um vetor (embedding) para cada rosto, e uma regra de decisão libera só quem estiver perto o bastante de um integrante cadastrado. Cadastrar alguém novo não exige retreinar a rede, basta guardar os vetores.
+Um classificador comum com N classes sempre escolhe uma delas: um estranho na frente da câmera seria classificado como "o cadastrado mais parecido". Controle de acesso é um problema de **conjunto aberto**: no teste aparecem pessoas que não existiam no treino, e o sistema precisa saber dizer "não conheço".
 
-### Prazo e regras do enunciado
+O projeto estuda esse problema com **poucas fotos de cadastro por pessoa** e usando **transfer learning**: aproveitar uma CNN já treinada para reconhecer rostos em geral e adaptá-la, em vez de treinar do zero.
 
-- **Entrega: 30/11 às 14h no AVA** — artigo/relatório **+ vídeo + slides** (faltar qualquer um penaliza a nota).
-- **Apresentação ao vivo** no Google Meet: 15 min (±5 min); passar do tempo penaliza.
-- Nota final = nota da apresentação (individual, 0 a 1) × nota do relatório (grupo, 0 a 10): todos precisam dominar o conteúdo.
-- O enunciado não exige template; mantemos o SBC já montado em `artigo/`.
-- Temas do enunciado cobertos: **redes convolucionais**, **encoders** (a CNN que gera o vetor) e **fine-tuning**.
+## Como funciona
 
-Itens marcados como *(opcional)* só entram se sobrar tempo.
+```
+webcam → detecção → alinhamento → CNN (encoder) → vetor de 512 números → regra de decisão → LIBERADO / NEGADO
+```
 
-### Calendário
+1. **Detecção:** o YuNet (OpenCV) encontra o rosto e 5 pontos de referência (olhos, nariz e cantos da boca).
+2. **Alinhamento:** os 5 pontos são usados para girar, escalar e recortar o rosto em 112×112, no padrão que as redes de reconhecimento esperam.
+3. **Encoder:** uma CNN transforma o rosto num vetor. Fotos da mesma pessoa geram vetores próximos; de pessoas diferentes, vetores distantes.
+4. **Cadastro:** cada pessoa autorizada tira algumas fotos, e o sistema guarda os vetores. **Cadastrar alguém novo não exige retreinar a rede.**
+5. **Decisão:** o vetor do rosto na câmera é comparado com os cadastrados. Se estiver perto o bastante de alguém, o acesso é liberado; se não, é negado.
 
-| Período | Foco |
+O trabalho compara redes pré-treinadas (rede congelada × fine-tuning) e regras de decisão (limiar, kNN, One-Class SVM, SVM com negativos), medindo a taxa de falsa aceitação (estranhos liberados) e de falsa rejeição (cadastrados barrados). Os desconhecidos de teste vêm do dataset público [LFW](https://vis-www.cs.umass.edu/lfw/).
+
+## Estado atual
+
+| Etapa | Situação |
 |---|---|
-| 17 a 20/11 | postar no AVA; embedding + cadastro + decisão na interface; LFW; **coleta das sessões** |
-| 21 a 25/11 | experimentos (regras de decisão, fotos de cadastro, FAR) e fine-tuning |
-| 26 a 29/11 | artigo, slides, gravação da demo e do vídeo, ensaio cronometrado |
-| 30/11 (manhã) | folga para imprevistos; entrega até 14h |
+| Detecção facial (YuNet) | ✅ pronta |
+| Alinhamento 112×112 | ✅ pronto |
+| Interface ao vivo com captura de fotos | ✅ pronta |
+| Encoder (CNN pré-treinada) e cadastro | 🚧 em andamento |
+| Decisão LIBERADO / NEGADO | 🚧 em andamento |
+| Avaliação e fine-tuning | ⏳ a fazer |
 
-### 1. Garantir o tema (hoje)
-- [ ] Postar no AVA: integrantes; temas "Redes Convolucionais / Encoders + fine-tuning (transfer learning)"; dados "imagens faciais próprias + LFW". Nenhum grupo pode repetir a combinação.
-- [ ] Termo de consentimento assinado pelos 4 para uso das fotos (LGPD).
+## Instalação
 
-### 2. Pipeline base (rede congelada) — até 20/11
-- [x] Detecção facial com YuNet (`src/deteccao.py`)
-- [x] Interface ao vivo com baixa latência (`src/interface.py`, `src/camera.py`)
-- [x] Alinhamento pelos 5 pontos e recorte 112×112 no padrão ArcFace (`src/alinhamento.py`)
-- [x] Captura na interface → `dados/integrantes/<nome>/<sessão>/` (`src/captura.py`)
-- [ ] Embedding com CNN pré-treinada (ArcFace/SFace)
-- [ ] Cadastro + decisão por similaridade de cosseno → **LIBERADO / NEGADO** na interface
-
-### 3. Dados — até 22/11
-- [ ] Cada integrante grava 3 sessões em dias diferentes (sugestão: 18, 20 e 22/11), variando luz, óculos, distância e ângulo
-- [ ] Baixar o LFW (desconhecidos) e passá-lo pelo mesmo pipeline
-- [ ] Divisão fixa em arquivo: integrantes por **sessão**, desconhecidos por **identidade**
-
-### 4. Regras de decisão (em cima da rede congelada) — 21 a 23/11
-- [ ] Comparar limiar no centróide, kNN, One-Class SVM, SVM com negativos e softmax com limiar (linha de base fechada)
-- [ ] Número de fotos de cadastro: 1, 3, 5, 10, 20
-- [ ] Limiar calibrado para FAR de 1% e 0,1%; curvas DET e EER
-- [ ] Impostores parecidos (os mais próximos de cada integrante no LFW)
-- [ ] *(opcional)* Crescimento do banco de cadastrados (LFW como membros falsos: 4, 10, 50, 100)
-
-### 5. Transfer learning — 22 a 25/11
-
-| Nível | O que se faz | No projeto |
-|---|---|---|
-| 1. Extração de características | rede pré-treinada congelada | ArcFace/SFace como estão (passos 2 e 4) |
-| 2. Fine-tuning parcial | descongela as últimas camadas, perda ArcFace | adaptar a rede aos dados |
-| 3. Fine-tuning completo | rede inteira, taxa de aprendizado baixa | verificar se compensa ou causa overfitting |
-
-- [ ] Níveis 1 × 2
-- [ ] *(opcional)* Nível 3
-- [ ] *(opcional)* Origem do conhecimento: ResNet pré-treinada no **ImageNet** × rede pré-treinada **em rostos**
-- [ ] *(opcional)* Cadastro depois do fine-tuning: ajustar sem um integrante e cadastrá-lo depois, para ver se a rede se especializou demais
-- Cortado pelo prazo: treino do zero (ResNet18 no CelebA), que exigiria horas de GPU e um download grande. No artigo, a comparação com "sem transferência" fica citada pela literatura.
-
-O fine-tuning usa várias identidades públicas **mais** as fotos do grupo: pessoas do LFW com 10 ou mais fotos, **separadas** das usadas como desconhecidos no teste (CelebA só se faltarem identidades). Ajustar só com os 4 integrantes tende a piorar a rejeição de desconhecidos.
-
-### 6. Entrega — 26 a 30/11
-- [ ] Figuras e tabelas geradas por script em `imagens/`
-- [ ] Artigo/relatório (`artigo/main.tex`)
-- [ ] Slides (`apresentacao/slides.tex`) — também são entregues
-- [ ] Demo final com votação entre quadros, gravada para o vídeo
-- [ ] Vídeo da apresentação (15 min ±5), com todos falando
-- [ ] Ensaio cronometrado da apresentação ao vivo
-- [ ] Subir artigo + vídeo + slides no AVA até **30/11 às 14h**
-
-### Divisão sugerida
-
-| Pessoa | Frente |
-|---|---|
-| A | pipeline (alinhamento, captura, interface, demo) |
-| B | dados (coleta, LFW, divisões) e avaliação (métricas, curvas) |
-| C | regras de decisão e experimentos do passo 4 |
-| D | transfer learning (passo 5) |
-
-O artigo é escrito por todos, cada um cuidando da seção da sua frente.
-
-## Estrutura
-
-| Pasta | Conteúdo |
-|---|---|
-| `artigo/` | artigo/relatório no template SBC |
-| `apresentacao/` | slides em Beamer |
-| `src/` | código Python (pipeline, treino, avaliação, demo) |
-| `dados/` | dados locais, não versionados (LGPD) |
-| `modelos/` | pesos baixados ou treinados, não versionados |
-| `imagens/` | figuras usadas no artigo e nos slides |
-| `build/` | tudo o que é compilado (PDFs, .aux, .log...) |
-
-## Ambiente Python
-
-Requer Python 3.12. Em Linux com GPU NVIDIA, o PyTorch instalado pelo pip já vem com CUDA.
+Requer **Python 3.12**. Em Linux com GPU NVIDIA, o PyTorch instalado pelo pip já vem com suporte a CUDA. Sem GPU, tudo roda na CPU, só que o treino fica mais lento.
 
 ```bash
+git clone git@github.com:guugimeness/open-set-face-access.git
+cd open-set-face-access
 python3 -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate          # no Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
@@ -113,36 +51,69 @@ Para conferir se a GPU foi reconhecida:
 python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0))"
 ```
 
-No Windows, ative com `.venv\Scripts\activate`. Sem GPU NVIDIA, tudo roda na CPU, só que o treino fica mais lento.
+No Linux, a interface usa o Tkinter do sistema. Se der erro de `tkinter` ao abrir, instale com `sudo apt install python3-tk`.
 
-## Rodar
+## Como rodar
 
-Sempre a partir da raiz do projeto, com o ambiente ativado:
+Sempre a partir da raiz do projeto, com o ambiente ativado. Na primeira execução, o modelo YuNet (cerca de 230 KB) é baixado automaticamente para `modelos/`.
+
+### Interface
 
 ```bash
-python -m src.interface                  # janela com vídeo ao vivo, controles e captura para o cadastro
-python -m src.deteccao                   # detecção ao vivo na primeira webcam com imagem (q para sair)
-python -m src.deteccao --camera 2        # outra webcam
-python -m src.deteccao --imagem foto.jpg # detecção numa imagem
+python -m src.interface
 ```
 
-Na primeira execução, o modelo YuNet é baixado automaticamente para `modelos/`.
+Abre uma janela com o vídeo da webcam e a detecção ao vivo. Na barra lateral:
 
-### Coletar as fotos de cadastro
+- **Câmera:** escolha a webcam (a interface lista só as que entregam imagem), espelhe a imagem e mostre ou esconda os pontos do rosto.
+- **Detecção:** ajuste a confiança mínima do detector.
+- **Cadastro:** capture as fotos de uma pessoa (veja abaixo).
 
-1. Abra `python -m src.interface`, digite seu nome e confira a sessão (padrão: data de hoje).
-2. Fique sozinho na imagem, perto da câmera, até o indicador mostrar **Rosto pronto**.
-3. Use **Capturar 20 em sequência** e mexa levemente a cabeça (ângulo, expressão) enquanto captura. A barra de espaço tira uma foto avulsa.
-4. Repita em pelo menos 3 dias diferentes, variando luz, óculos e distância.
+Abaixo do vídeo aparecem FPS, atraso, número de rostos, confiança e inclinação da cabeça.
 
-Cada foto gera dois arquivos:
+### Capturar as fotos de cadastro
+
+1. Na interface, digite o nome da pessoa e confira a sessão (o padrão é a data de hoje).
+2. Fique sozinho na imagem e perto da câmera, até o indicador no topo mostrar **Rosto pronto**.
+3. Clique em **Capturar 20 em sequência** e mexa levemente a cabeça (ângulo, expressão) durante a captura. A **barra de espaço** tira uma foto avulsa.
+4. Repita em **dias diferentes**, variando luz, óculos e distância. A avaliação separa as fotos por sessão, então mais sessões dão resultados mais confiáveis.
+
+A foto só é salva com exatamente um rosto na imagem e com o rosto grande o bastante. Cada foto gera dois arquivos:
 
 ```
 dados/integrantes/<nome>/<sessão>/alinhadas/0001.png   rosto alinhado 112×112 (entrada da CNN)
 dados/integrantes/<nome>/<sessão>/quadros/0001.jpg     quadro original (para refazer o alinhamento, se preciso)
 ```
 
-## Compilar
+### Detecção pela linha de comando
+
+```bash
+python -m src.deteccao                    # primeira webcam com imagem (q para sair)
+python -m src.deteccao --camera 2         # webcam específica
+python -m src.deteccao --imagem foto.jpg  # detecta numa imagem
+```
+
+## Estrutura
+
+```
+├── src/
+│   ├── interface.py     interface gráfica (vídeo ao vivo + captura)
+│   ├── deteccao.py      detector facial YuNet
+│   ├── alinhamento.py   alinhamento e recorte 112×112
+│   ├── captura.py       salvamento das fotos de cadastro
+│   ├── camera.py        leitura da webcam com atraso mínimo
+│   └── config.py        caminhos do projeto
+├── artigo/              artigo (LaTeX, template SBC)
+├── apresentacao/        slides (LaTeX Beamer)
+├── dados/               fotos e datasets — locais, fora do git
+├── modelos/             pesos baixados ou treinados — fora do git
+├── imagens/             figuras do artigo e dos slides
+└── build/               PDFs e arquivos compilados — fora do git
+```
+
+## Artigo e slides
+
+O artigo e os slides são compilados com `latexmk`. Todos os arquivos gerados vão para `build/`:
 
 ```bash
 make          # artigo e slides
@@ -150,3 +121,11 @@ make artigo   # build/artigo/main.pdf
 make slides   # build/apresentacao/slides.pdf
 make clean    # limpa build/
 ```
+
+## Privacidade
+
+Fotos de rosto são dados biométricos, considerados dados pessoais sensíveis pela LGPD. As fotos dos integrantes são coletadas com consentimento, ficam só na máquina local e **nunca são versionadas**: `dados/` e `modelos/` estão no `.gitignore`. Os datasets públicos usados (LFW) seguem as licenças de uso para pesquisa.
+
+## Autores
+
+Gustavo Cesar Bento Laurindo, Gustavo de Oliveira Gimenes, Lucas Vasconcelos Fujii e Mairon Cesar de Paula Faria — Departamento de Computação, UFSCar.
